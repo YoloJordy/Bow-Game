@@ -8,12 +8,9 @@ public class ArrowBase : MonoBehaviour
     public float projectileSpeed = 100f;
 
     [SerializeField]
-    int damage = 1;
+    int damage;
 
-    [System.NonSerialized] 
-    public float drawLength;
-
-    bool stuck = false;
+    Vector3 prevPosition;
 
     Rigidbody m_Rigidbody;
 
@@ -21,30 +18,36 @@ public class ArrowBase : MonoBehaviour
     void Start()
     {
         m_Rigidbody = GetComponent<Rigidbody>();
-        Fire();
+        m_Rigidbody.detectCollisions = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (!stuck)
-        {
-            transform.LookAt(transform.position + m_Rigidbody.velocity);
-        }
+        if (!m_Rigidbody.isKinematic) transform.LookAt(transform.position + m_Rigidbody.velocity);
+
+        prevPosition = transform.position;
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        m_Rigidbody.constraints = RigidbodyConstraints.FreezeAll;
+        Collider collider = collision.collider;
+        m_Rigidbody.isKinematic = true;
         m_Rigidbody.detectCollisions = false;
-        stuck = true;
 
-        if (collision.collider.tag.Contains("Enemy")) collision.collider.GetComponent<Health>().Damage(damage);
+        Health health = collider.GetComponent<Health>();
+
+        if (health != null) health.Damage(damage);
     }
 
-    public void Fire()
+    public void Fire(float drawLength)
     {
+        m_Rigidbody.detectCollisions = true;
+        m_Rigidbody.isKinematic = false;
+        m_Rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        transform.parent = null;
         projectileSpeed *= drawLength;
-        m_Rigidbody.AddForce(transform.forward * projectileSpeed, ForceMode.Impulse);
+        Vector3 inheritVelocity = ((transform.position - prevPosition) / Time.deltaTime);
+        m_Rigidbody.AddForce(transform.forward * (projectileSpeed > inheritVelocity.magnitude ? projectileSpeed : inheritVelocity.magnitude), ForceMode.VelocityChange);
+        Debug.Log(inheritVelocity);
     }
 }

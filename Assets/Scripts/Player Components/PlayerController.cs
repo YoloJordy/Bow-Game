@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] float movementSpeed = 5.0f;
 
-    PlayerInputHandler inputHandler;
+    InputHandler inputHandler;
     CharacterController characterController;
 
     float cameraVerticalAngle = 0;
@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        inputHandler = GetComponent<PlayerInputHandler>();
+        inputHandler = InputHandler.current;
         characterController = GetComponent<CharacterController>();
 
         Cursor.visible = false;
@@ -37,7 +37,5 @@ public class PlayerController : MonoBehaviour
         cameraVerticalAngle += Time.deltaTime * inputHandler.turnSpeed * inputHandler.GetVerticalLookInput() * -1.2f;
         cameraVerticalAngle = Mathf.Clamp(cameraVerticalAngle, -89f, 89f);
         firstPersonCamera.transform.localEulerAngles = new Vector3(cameraVerticalAngle, 0, 0);
-
-        if (inputHandler.GetChargeRelease()) bow.Fire(inputHandler.GetChargeAmount(), firstPersonCamera.transform.forward);
     }
 }
