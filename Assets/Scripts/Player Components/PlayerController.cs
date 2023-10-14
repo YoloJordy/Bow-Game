@@ -2,10 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : Entity
 {
     [SerializeField] GameObject firstPersonCamera;
-    [SerializeField] BowController bow;
 
     [SerializeField] float movementSpeed = 5.0f;
 
@@ -14,7 +13,12 @@ public class PlayerController : MonoBehaviour
 
     float cameraVerticalAngle = 0;
 
-    // Start is called before the first frame update
+    [SerializeField] Transform groundPoint;
+    [SerializeField] LayerMask groundMask;
+    [SerializeField] float groundDistance;
+
+
+
     void Start()
     {
         inputHandler = InputHandler.current;
@@ -24,14 +28,26 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    // Update is called once per frame
     void Update()
     {
         //movement & rotation
-        Vector3 movement = (transform.forward * movementSpeed * inputHandler.GetVerticalMoveInput()) + 
+        var movement = (transform.forward * movementSpeed * inputHandler.GetVerticalMoveInput()) + 
                            (transform.right * movementSpeed * inputHandler.GetHorizontalMoveInput());
         characterController.SimpleMove(movement);
         transform.Rotate(Vector3.up * Time.deltaTime * inputHandler.turnSpeed * inputHandler.GetHorizontalLookInput());
+
+        //falling off slopes
+        RaycastHit hit;
+        if (Physics.Raycast(groundPoint.position, Vector3.down, out hit, groundDistance, groundMask))
+        {
+            characterController.Move(new Vector3(0, -hit.distance));
+            groundDistance = 0.5f;
+        }
+        else
+        {
+            groundDistance = 0.1f;
+        }
+
 
         //camera rotation
         cameraVerticalAngle += Time.deltaTime * inputHandler.turnSpeed * inputHandler.GetVerticalLookInput() * -1.2f;

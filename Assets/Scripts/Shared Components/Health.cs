@@ -8,7 +8,11 @@ public class Health : MonoBehaviour
     int maxHealth = 10;
     int health;
 
-    // Start is called before the first frame update
+    float timeLastDamage = 0;
+
+    [SerializeField] float weakPointModifier = 2f;
+    [SerializeField] float resistPointModifier = 0.5f;
+
     void Start()
     {
         health = maxHealth;
@@ -25,11 +29,19 @@ public class Health : MonoBehaviour
         if (health > maxHealth) health = maxHealth;
     }
 
-    public void Damage(int amount)
+    public void Damage(int amount, string tag)
     {
-        health -= amount;
+        if (Time.time <= timeLastDamage) return;
+
+        var modifier = 1f;
+        if (tag == "WeakPoint") modifier = weakPointModifier;
+        else if (tag == "ResistPoint") modifier = resistPointModifier;
+
+        health -= (int)(amount * modifier);
         if (health < 0) health = 0;
         Debug.Log(gameObject.name + " health = " + health);
+
+        timeLastDamage = Time.time;
     }
 
     public bool IsDead
